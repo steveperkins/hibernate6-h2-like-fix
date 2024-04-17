@@ -1,0 +1,11 @@
+package com.sperkins.hibernate;
+
+public class H2OracleDefaultEscapeDialect extends H2Dialect {
+
+  @Override
+  public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
+    return (StandardSqlAstTranslatorFactory) buildTranslator(sessionFactory, statement) -> {
+      return new H2OracleDefaultEscapeTranslator<>(sessionFactory, statement);
+    }
+  }
+}
