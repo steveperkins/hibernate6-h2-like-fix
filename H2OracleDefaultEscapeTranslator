@@ -1,0 +1,48 @@
+package com.sperkins.hibernate;
+
+import org.hibernate.dialect.H2SqlAstTranslator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.predicate.LikePredicate;
+import org.hibernate.sql.exec.spi.JdbcOperation;
+
+public class H2OracleDefaultEscapeTranslator<T extends JdbcOperation> extends H2SqlAstTranslator<T> {
+
+    public H2OracleDefaultEscapeTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+        super(sessionFactory, statement);
+    }
+
+    @Override
+    public void visitLikePredicate(LikePredicate likePredicate) {
+        LikePredicate mutatedPredicate = new LikePredicate(likePredicate.getMatchExpression(), likePredicate.getPattern(), new EscapeExpression("\\"), likePredicate.isNegated(), likePredicate.isCaseSensitive(), likePredicate.getExpressionType());
+        super.visitLikePredicate(mutatedPredicate);
+    }
+
+    class EscapeExpression implements Expression {
+
+        private final String escapeCharacter;
+
+        EscapeExpression(String escapeCharacter) {
+            this.escapeCharacter = escapeCharacter;
+        }
+
+        @Override
+        public JdbcMappingContainer getExpressionType() {
+            return null;
+        }
+
+        @Override
+        public void accept(SqlAstWalker sqlTreeWalker) {
+            ((SqlAppender) sqlTreeWalker).appendSql("'" + escapeCharacter + "'");
+        }
+
+        @Override
+        public String toString() {
+            return escapeCharacter;
+        }
+    }
+}
